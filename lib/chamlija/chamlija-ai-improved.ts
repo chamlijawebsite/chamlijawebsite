@@ -1048,7 +1048,7 @@ export function generateUnknownResponse(): ChatResponse {
         ]
       },
       {
-        content: "Başka konular hakkında bilgi almak için lütfen +27 062 087 3208 numarasını arayın veya buyukchamlija@uict.org.za adresine e-posta gönderin."
+        content: "Başka konular hakkında bilgi almak için lütfen +27 65 585 9178 numarasını arayın veya buyukchamlija@uict.org.za adresine e-posta gönderin."
       }
     ]
   };

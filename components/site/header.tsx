@@ -43,8 +43,8 @@ export function SiteHeader() {
   };
 
   const contactItems = [
-    { label: "Phone", value: "+27 062 087 3208", href: "tel:+270620873208" },
-    { label: "WhatsApp", value: "Chat on WhatsApp", href: "https://wa.me/27620873208?text=Hi%20Chamlija" },
+    { label: "Phone", value: "+27 65 585 9178", href: "tel:+27655859178" },
+    { label: "WhatsApp", value: "Chat on WhatsApp", href: "https://wa.me/27655859178?text=Hi%20Chamlija" },
     { label: "Email", value: "buyukchamlija@uict.org.za", href: "mailto:buyukchamlija@uict.org.za" },
     { label: "Location", value: CHAMLIJA_LOCATION.address, href: CHAMLIJA_MAPS_URL },
   ];

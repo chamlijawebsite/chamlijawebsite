@@ -47,7 +47,7 @@ async function PaymentSuccessContent({ bookingId }: { bookingId: string }) {
 
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <div className="font-semibold">Need help or an issue arises?</div>
-          <div className="mt-2">Please contact us at +27 062 087 3208 or email buyukchamlija@uict.org.za with your reservation code.</div>
+          <div className="mt-2">Please contact us at +27 65 585 9178 or email buyukchamlija@uict.org.za with your reservation code.</div>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

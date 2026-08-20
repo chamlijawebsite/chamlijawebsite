@@ -15,7 +15,7 @@ export default function PaymentFailurePage({
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-          If there is a problem with your reservation, please contact us at +27 062 087 3208 or buyukchamlija@uict.org.za.
+          If there is a problem with your reservation, please contact us at +27 65 585 9178 or buyukchamlija@uict.org.za.
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

@@ -3,7 +3,7 @@ import { CHAMLIJA_LOCATION } from "@/lib/location";
 export const VERIFIED_CHAMLIJA_FACTS = {
   location: CHAMLIJA_LOCATION,
   contact: {
-    phone: "+27 062 087 3208",
+    phone: "+27 65 585 9178",
     email: "buyukchamlija@uict.org.za",
     instagram: "@buyukchamlija",
   },
