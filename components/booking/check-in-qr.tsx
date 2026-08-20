@@ -6,9 +6,10 @@ import { useRef } from "react";
 type CheckInQrProps = {
   token: string | null | undefined;
   paymentStatus: string | null | undefined;
+  whatsappUrl?: string;
 };
 
-export function CheckInQr({ token, paymentStatus }: CheckInQrProps) {
+export function CheckInQr({ token, paymentStatus, whatsappUrl }: CheckInQrProps) {
   const qrCodeRef = useRef<HTMLDivElement>(null);
   if (!token) return null;
 
@@ -61,6 +62,10 @@ export function CheckInQr({ token, paymentStatus }: CheckInQrProps) {
       <button type="button" onClick={downloadQrCode} className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-3 text-base font-black uppercase tracking-wide text-white shadow-lg transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-300">
         ⬇️ DOWNLOAD QR CODE
       </button>
+      {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-3 flex min-h-[56px] w-full items-center justify-center gap-3 rounded-xl border border-[#178a4b] bg-[#176b3c] px-4 py-2 text-white shadow-[0_10px_24px_rgba(23,107,60,0.2)] transition hover:bg-[#145d35] focus:outline-none focus:ring-4 focus:ring-emerald-200">
+        <span aria-hidden="true" className="text-2xl leading-none">💬</span>
+        <span className="text-left"><span className="block text-sm font-black sm:text-base">Send reservation details via WhatsApp</span><span className="mt-0.5 block text-xs font-medium text-emerald-100">Reservation details + QR access link</span></span>
+      </a>}
       <div className="mt-4 rounded-2xl border-2 border-amber-500 bg-amber-100 p-5 text-left shadow-md sm:p-6">
         <p className="text-base font-black uppercase leading-6 tracking-wide text-amber-950 sm:text-lg">⚠️ IMPORTANT — SAVE YOUR QR CODE</p>
         <p className="mt-3 text-sm font-bold leading-6 text-amber-950 sm:text-base">You MUST show this QR code to our gate staff when you arrive at Chamlija.</p>

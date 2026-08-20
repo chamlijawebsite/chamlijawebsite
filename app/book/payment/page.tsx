@@ -250,11 +250,8 @@ Please keep this WhatsApp message so I can access my gate QR again if I lose it.
                   {currentPaymentState?.code === "rejected" && <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-left text-sm leading-6 text-rose-900"><div className="font-black">Payment rejected</div><p className="mt-1">{state.booking.payment_rejection_reason || "Please upload a new receipt or contact Chamlija staff."}</p></div>}
                   {currentPaymentState?.code !== "verified" && currentPaymentState?.code !== "rejected" && <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left text-sm font-semibold leading-6 text-amber-900">Entry is not available until Chamlija staff approve your payment.</div>}
                   <div className="mt-6 rounded-2xl border border-emerald-200 bg-white p-4">
-                    <CheckInQr token={state.booking.check_in_token} paymentStatus={state.booking.payment_status} />
+                    <CheckInQr token={state.booking.check_in_token} paymentStatus={state.booking.payment_status} whatsappUrl={whatsappUrl} />
                   </div>
-                  <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-center text-sm font-black uppercase tracking-wide text-white shadow-lg transition hover:bg-[#1ebe5d] focus:outline-none focus:ring-4 focus:ring-[#25D366]/30 sm:text-base">
-                    <span aria-hidden="true" className="text-xl">💬</span> REZERVASYON BİLGİLERİMİ WHATSAPP&apos;TAN GÖNDER
-                  </a>
                   <Link href="/" className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(4,120,87,0.18)] transition hover:bg-emerald-800">
                     ← Back to Home
                   </Link>
