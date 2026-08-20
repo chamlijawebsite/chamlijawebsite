@@ -29,7 +29,7 @@ async function verifyToken(rawToken: string) {
   const supabaseAdmin = getSupabaseAdminClient();
   const { data: booking, error } = await supabaseAdmin
       .from("bookings")
-      .select("id, reservation_code, customer_name, booking_date, booking_time, adults, children_3_plus, children_under_3, selected_area_id, booking_status, payment_status, checked_in, checked_in_at")
+      .select("id, reservation_code, customer_name, booking_date, booking_time, adults, children_3_plus, children_under_3, selected_area_id, payment_method, total_price, booking_status, payment_status, checked_in, checked_in_at")
       .eq("check_in_token", token)
       .maybeSingle();
 
