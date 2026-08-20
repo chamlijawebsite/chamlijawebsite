@@ -565,6 +565,7 @@ export default async function AdminDashboardPage({
   if (selectedCustomerEmail) bookingQuery = bookingQuery.eq("email", selectedCustomerEmail);
   if (activeFilter === "pending_payment") bookingQuery = bookingQuery.in("payment_status", ["pending", "pending_payment", "verification_pending"]);
   if (activeFilter === "paid") bookingQuery = bookingQuery.in("payment_status", ["paid", "verified", "confirmed", "approved"]);
+  if (activeFilter === "pay_at_gate") bookingQuery = bookingQuery.eq("payment_method", "cash_at_gate");
   if (activeFilter === "today") bookingQuery = bookingQuery.eq("booking_date", today);
   if (activeFilter === "checked_in") bookingQuery = bookingQuery.eq("checked_in", true);
   if (activeFilter === "ikhokha") bookingQuery = bookingQuery.ilike("payment_method", "%ikhokha%");
@@ -629,7 +630,7 @@ export default async function AdminDashboardPage({
     .order("name", { ascending: true });
 
   const weekStart = getWeekStart(today);
-  const [summaryRows, todayRows, bookingTotal, pendingPayments, confirmedBookings, cancelledBookings, refundPending] = await Promise.all([
+  const [summaryRows, todayRows, bookingTotal, pendingPayments, confirmedBookings, cancelledBookings, refundPending, payAtGateToday, checkedInToday] = await Promise.all([
     fetchSummaryBookings(supabaseAdmin, weekStart, today),
     fetchSummaryBookings(supabaseAdmin, today, today),
     fetchBookingCount(supabaseAdmin, (query) => query),
@@ -637,6 +638,8 @@ export default async function AdminDashboardPage({
     fetchBookingCount(supabaseAdmin, (query) => query.in("booking_status", ["confirmed", "paid", "approved", "verified"])),
     fetchBookingCount(supabaseAdmin, (query) => query.in("booking_status", ["cancelled", "canceled"])),
     fetchBookingCount(supabaseAdmin, (query) => query.eq("payment_status", "refund_pending")),
+    fetchBookingCount(supabaseAdmin, (query) => query.eq("booking_date", today).eq("payment_method", "cash_at_gate")),
+    fetchBookingCount(supabaseAdmin, (query) => query.eq("checked_in", true).gte("checked_in_at", `${today}T00:00:00+02:00`).lt("checked_in_at", `${today}T23:59:59+02:00`)),
   ]);
   const filteredItems = items;
   const summary = {
@@ -649,6 +652,10 @@ export default async function AdminDashboardPage({
 
   const todaySummary = summarizeBookings(todayRows, today, today);
   const weekSummary = summarizeBookings(summaryRows, weekStart, today);
+  const paidTodayRows = todayRows.filter((booking) => ["paid", "verified"].includes(String(booking.payment_status ?? "").toLowerCase()));
+  const paidToday = paidTodayRows.length;
+  const todayRevenue = paidTodayRows.reduce((total, booking) => total + Number(booking.total_price ?? 0), 0);
+  const todayGuests = todayRows.reduce((total, booking) => total + Number(booking.adults ?? 0) + Number(booking.children_3_plus ?? 0) + Number(booking.children_under_3 ?? 0), 0);
   const calendarRange = getCalendarMonthRange(calendarMonth);
   const calendarBookings = await fetchCalendarBookings(supabaseAdmin, calendarRange.start, calendarRange.end);
 
@@ -707,6 +714,13 @@ export default async function AdminDashboardPage({
           .maybeSingle()
       )?.data ?? null
     : null;
+  const selectedAuditLogs = selectedBookingWithDiscount
+    ? (await supabaseAdmin
+        .from("payment_audit_logs")
+        .select("new_status, changed_at, admin_note, rejection_reason")
+        .eq("booking_id", selectedBookingWithDiscount.id)
+        .order("changed_at", { ascending: false }))?.data ?? []
+    : [];
   const refundAmountDue = Number(selectedPayment?.refund_amount ?? selectedPayment?.amount ?? selectedBookingWithDiscount?.total_price ?? 0);
   const paidAmount = selectedBookingWithDiscount ? (paymentLookup[selectedBookingWithDiscount.id]?.validPaid ?? 0) : 0;
   const outstandingBalance = selectedBookingWithDiscount
@@ -719,6 +733,19 @@ export default async function AdminDashboardPage({
         .filter(Boolean)
     : [];
   const adminNotifications = await fetchAdminNotifications(supabaseAdmin);
+  const activityItems = selectedBookingWithDiscount
+    ? [
+        ...selectedAuditLogs.map((audit) => ({
+          type: String(audit.new_status ?? "").toLowerCase() === "rejected" ? "Payment rejected" : "Payment approved",
+          time: audit.changed_at,
+          reviewer: selectedPayment?.verified_by ?? null,
+          reason: audit.rejection_reason ?? audit.admin_note ?? null,
+        })),
+        ...(selectedBookingWithDiscount.checked_in && selectedBookingWithDiscount.checked_in_at
+          ? [{ type: "Check-in completed", time: selectedBookingWithDiscount.checked_in_at, reviewer: null, reason: null }]
+          : []),
+      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    : [];
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
@@ -746,6 +773,22 @@ export default async function AdminDashboardPage({
                 <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-current/20 bg-white/70 text-base font-bold">{card.icon}</span>
               </div>
               <div className="mt-4 truncate text-3xl font-black leading-none tracking-tight">{card.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            { label: "PENDING PAYMENTS", value: pendingPayments, tone: "border-amber-200 bg-amber-50 text-amber-800" },
+            { label: "PAID TODAY", value: paidToday, tone: "border-emerald-200 bg-emerald-50 text-emerald-800" },
+            { label: "PAY AT GATE TODAY", value: payAtGateToday, tone: "border-orange-200 bg-orange-50 text-orange-800" },
+            { label: "TODAY'S GUESTS", value: todayGuests, tone: "border-sky-200 bg-sky-50 text-sky-800" },
+            { label: "CHECKED-IN TODAY", value: checkedInToday, tone: "border-teal-200 bg-teal-50 text-teal-800" },
+            { label: "TODAY'S REVENUE", value: formatMoney(todayRevenue), tone: "border-emerald-200 bg-emerald-50 text-emerald-800" },
+          ].map((card) => (
+            <div key={card.label} className={`min-w-0 rounded-2xl border p-3 shadow-sm sm:p-4 ${card.tone}`}>
+              <div className="truncate text-[10px] font-black uppercase tracking-[0.1em] sm:text-xs">{card.label}</div>
+              <div className="mt-3 truncate text-xl font-black sm:text-2xl">{card.value}</div>
             </div>
           ))}
         </div>
@@ -799,6 +842,7 @@ export default async function AdminDashboardPage({
               { value: "ikhokha", label: "iKhokha" },
               { value: "pending_payment", label: "Pending Payment" },
               { value: "paid", label: "Paid" },
+              { value: "pay_at_gate", label: "Pay at Gate" },
                   { value: "today", label: "Today's Bookings" },
                   { value: "checked_in", label: "Checked In" },
             ].map((filterOption) => {
@@ -1243,6 +1287,11 @@ export default async function AdminDashboardPage({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
                 <div className="text-sm font-semibold text-slate-900">Check-in</div>
                 <p className="mt-2 font-medium text-slate-700">{selectedBookingWithDiscount.checked_in ? `✓ Checked in${selectedBookingWithDiscount.checked_in_at ? ` · ${formatCreatedAt(selectedBookingWithDiscount.checked_in_at)}` : ""}` : "Not checked in"}</p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-sm font-semibold text-slate-900">Activity / Audit</div>
+                {activityItems.length === 0 ? <p className="mt-3 text-sm text-slate-500">NO ACTIVITY YET</p> : <div className="mt-4 space-y-4">{activityItems.map((activity, index) => <div key={`${activity.type}-${activity.time}-${index}`} className="relative pl-6 text-sm"><span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-emerald-600 ring-4 ring-emerald-50" /><div className="font-bold text-slate-900">{activity.type}</div>{activity.reviewer && <div className="mt-1 text-slate-600">Reviewed by: {activity.reviewer}</div>}{activity.reason && <div className="mt-1 text-slate-600">Reason: {activity.reason}</div>}<div className="mt-1 text-xs text-slate-500">{formatCreatedAt(activity.time)}</div>{index < activityItems.length - 1 && <span className="absolute left-[5px] top-5 h-[calc(100%+1rem)] w-px bg-emerald-100" />}</div>)}</div>}
               </div>
 
               <form action={`/api/admin/bookings/${selectedBookingWithDiscount.id}/reschedule`} method="POST" className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
